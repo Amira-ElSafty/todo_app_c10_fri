@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_app_todo_c10_fri/dialog_utils.dart';
 import 'package:flutter_app_todo_c10_fri/home/firebase_utils.dart';
+import 'package:flutter_app_todo_c10_fri/providers/auth_providers.dart';
 import 'package:flutter_app_todo_c10_fri/providers/list_provider.dart';
-import 'package:flutter_app_todo_c10_fri/task.dart';
+import 'package:flutter_app_todo_c10_fri/model/task.dart';
 import 'package:provider/provider.dart';
 
 class AddTaskBottomSheet extends StatefulWidget {
@@ -106,6 +108,7 @@ class _AddTaskBottomSheetState extends State<AddTaskBottomSheet> {
         initialDate: DateTime.now(),
         firstDate: DateTime.now(),
         lastDate: DateTime.now().add(Duration(days: 365)));
+    print('chosen date : $chosenDate');
     if (chosenDate != null) {
       selectedDate = chosenDate;
       setState(() {});
@@ -116,16 +119,28 @@ class _AddTaskBottomSheetState extends State<AddTaskBottomSheet> {
   void addTask() {
     if (formKey.currentState?.validate() == true) {
       // add task
+      DialogUtils.showLoading(context: context, message: 'Loading...');
       Task task =
-          Task(title: title, description: description, dateTime: selectedDate);
-      FirebaseUtils.addTaskToFireStore(task)
-          .timeout(Duration(milliseconds: 500), onTimeout: () {
+      Task(title: title, description: description, dateTime: selectedDate);
+      var authProvider = Provider.of<AuthProviders>(context, listen: false);
+      FirebaseUtils.addTaskToFireStore(task, authProvider.currentUser!.id!)
+          .then((value) {
         print('task added successfully');
+        Navigator.pop(context);
+        DialogUtils.hideLoading(context);
+        DialogUtils.showMessage(
+            context: context, message: 'Task added Successully',
+            posActionName: 'Ok');
 
         /// alert dialog , toast , snack bar
-        listProvider.getAllTasksFromFireStore();
-        Navigator.pop(context);
+        listProvider.getAllTasksFromFireStore(authProvider.currentUser!.id!);
       });
+      //     .timeout(Duration(milliseconds: 500), onTimeout: () {
+      //   print('task added successfully');
+      //   /// alert dialog , toast , snack bar
+      //   listProvider.getAllTasksFromFireStore(authProvider.currentUser!.id!);
+      //   Navigator.pop(context);
+      // });
     }
   }
 }

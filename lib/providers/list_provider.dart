@@ -1,16 +1,16 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_app_todo_c10_fri/home/firebase_utils.dart';
-import 'package:flutter_app_todo_c10_fri/task.dart';
+import 'package:flutter_app_todo_c10_fri/model/task.dart';
 
 class ListProvider extends ChangeNotifier {
   // data
   List<Task> tasksList = [];
   DateTime selectDate = DateTime.now();
 
-  void getAllTasksFromFireStore() async {
+  void getAllTasksFromFireStore(String uId) async {
     QuerySnapshot<Task> querySnapshot =
-        await FirebaseUtils.getTasksCollections().get();
+        await FirebaseUtils.getTasksCollections(uId).get();
 
     /// List<QueryDocumentSnapshot<Task>>   => List<Task>
     tasksList = querySnapshot.docs.map((doc) {
@@ -36,9 +36,9 @@ class ListProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  void changeSelectedDate(DateTime newSelectedDate) {
+  void changeSelectedDate(DateTime newSelectedDate, String uId) {
     selectDate = newSelectedDate;
-    getAllTasksFromFireStore();
+    getAllTasksFromFireStore(uId);
     notifyListeners();
   }
 }
